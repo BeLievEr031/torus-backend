@@ -3,7 +3,6 @@ import { AuthService } from '../services';
 import {
   AuthenticateReq,
   ChangePasswordRequest,
-  ForgetPassword,
   User,
   UserSignInRequest,
   UserSignUpRequest,
@@ -18,7 +17,6 @@ import TokenService from '../services/TokenService';
 import { JwtPayload } from 'jsonwebtoken';
 import UserDto from '../dtos/Auth-dto';
 import { Types } from 'mongoose';
-import MailService from '../services/MailService';
 
 class AuthController {
   constructor(
@@ -26,8 +24,7 @@ class AuthController {
     private queryService: QueryService,
     private tokenService: TokenService,
     private userDto: UserDto,
-    private mailService: MailService,
-  ) {}
+  ) { }
 
   async register(req: UserSignUpRequest, res: Response, next: NextFunction) {
     try {
@@ -80,12 +77,6 @@ class AuthController {
         return;
       }
 
-      if (user.devices == 0) {
-        const err = createHttpError(429, 'Device limit exceeded.');
-        next(err);
-        return;
-      }
-
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         const err = createHttpError(401, 'Invalid credentials.');
@@ -96,6 +87,7 @@ class AuthController {
       const payload: JwtPayload = {
         id: user._id,
         email: user.email,
+        role: user.role
       };
 
       const accessToken = this.tokenService.generateAccessToken(payload);
@@ -107,8 +99,6 @@ class AuthController {
         sameSite: 'strict',
       });
 
-      user.devices = user.devices - 1;
-      await user.save();
 
       const refresh = await this.tokenService.persistRefreshToken(user._id);
       const refreshPayload: JwtPayload = {
@@ -257,30 +247,6 @@ class AuthController {
     }
   }
 
-  async forgetPassword(req: ForgetPassword, res: Response, next: NextFunction) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
-        return;
-      }
-
-      const { email } = req.body;
-      const user = await this.queryService.findByEmail(email);
-      if (!user) {
-        const err = createHttpError(401, 'Invalid credentials.');
-        next(err);
-        return;
-      }
-
-      const info = await this.mailService.sendForgetPasswordMail(email);
-      res.status(200).json({ info });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
-
-// Validate
 
 export default AuthController;

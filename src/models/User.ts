@@ -23,11 +23,11 @@ const userSchema = new Schema<User>(
       required: true,
       minlength: 6,
     },
-    // The number of devices the user is logged into
-    devices: {
-      type: Number,
-      default: 1,
-    },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user"
+    }
   },
   {
     timestamps: true,

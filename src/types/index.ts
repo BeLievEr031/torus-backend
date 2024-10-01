@@ -3,12 +3,12 @@ import { Types } from 'mongoose';
 export type UserRole = 'USER' | 'ADMIN' | 'MANAGER';
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'BANNED';
 
-export interface User {
+export interface User extends Document {
   _id?: Types.ObjectId;
   email: string;
   name: string;
   password: string;
-  devices: number;
+  role: "admin" | "user"
 }
 
 export interface UserSignUpRequest extends Request {
@@ -39,6 +39,7 @@ export interface AuthenticateReq extends Request {
     id: string;
     email: string;
     sub?: string;
+    role: string;
   };
 }
 
@@ -54,15 +55,39 @@ export interface ChangePasswordRequest extends Request, AuthenticateReq {
   };
 }
 
-export interface ForgetPassword extends Request {
-  body: {
-    email: string;
+export interface Task extends Document {
+  _id?: Types.ObjectId;
+  assignedUser: Types.ObjectId;
+  title: string;
+  description: string;
+  dueDate: string | Date;
+  creatorId: Types.ObjectId;
+  status: "To Do" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High";
+}
+
+export interface AddTaskRequest extends Request, AuthenticateReq {
+  body: Task
+}
+
+export interface PaginationRequest extends Request, AuthenticateReq {
+  query: {
+    page: string;
+    limit: string;
+    orderBy: string;
   };
 }
 
-export interface TransporterObj {
-  MAIL_HOST: string;
-  MAIL_PORT: string;
-  MAIL_HOST_USER: string;
-  MAIL_HOST_PASS: string;
+export interface PaginationData {
+  page: string;
+  limit: string;
+  orderBy: string;
+}
+
+
+export interface AssignTaskRequest extends Request, AuthenticateReq {
+  body: Task;
+  query: {
+    userid: string;
+  };
 }

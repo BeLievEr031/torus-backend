@@ -5,6 +5,8 @@ import { userRouter } from './routes';
 import { HttpError } from 'http-errors';
 import cookieParser from 'cookie-parser';
 import Config from './config/config';
+import taskRouter from './routes/task.route';
+import adminRouter from './routes/admin.route';
 
 const app = express();
 app.use(morgan('tiny', { stream: morganStream }));
@@ -16,6 +18,8 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/task', taskRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: HttpError, req: Request, res: Response, _next: NextFunction) => {
